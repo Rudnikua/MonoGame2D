@@ -17,18 +17,18 @@ namespace ValleyStardew // Якщо ваш проєкт називається �
         private Texture2D _grassTexture;
         private Texture2D _dirtTexture;
         private Texture2D _waterTexture;
-        private const int TILE_SIZE = 64; // Розмір одного квадратика
+        private const int TILE_SIZE = 32; // Розмір одного квадратика
 
         // Наша карта: 0 - трава, 1 - земля, 2 - вода
         private int[,] _tileMap = new int[,]
         {
-            { 0, 0, 0, 0, 0, 0, 2, 2, 2, 2 },
-            { 0, 1, 1, 0, 0, 0, 0, 2, 2, 2 },
-            { 0, 1, 1, 0, 0, 0, 0, 0, 2, 2 },
+            { 2, 2, 0, 0, 0, 0, 0, 0, 2, 2 },
+            { 2, 1, 1, 0, 0, 0, 0, 0, 0, 2 },
+            { 0, 1, 1, 0, 0, 0, 0, 0, 0, 0 },
             { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
             { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-            { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-            { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
+            { 2, 0, 0, 0, 0, 0, 0, 0, 0, 2 },
+            { 2, 2, 0, 0, 0, 0, 0, 0, 2, 2 }
         };
 
         public Game1() {
@@ -54,9 +54,9 @@ namespace ValleyStardew // Якщо ваш проєкт називається �
 
             // Завантажуємо всі 4 картинки (назви мають точно збігатися з тими, що в MGCB)
             _playerTexture = Content.Load<Texture2D>("player");
-            _grassTexture = Content.Load<Texture2D>("grass64x64");
-            _dirtTexture = Content.Load<Texture2D>("dirt64x64");
-            _waterTexture = Content.Load<Texture2D>("water64x64");
+            _grassTexture = Content.Load<Texture2D>("grass");
+            _dirtTexture = Content.Load<Texture2D>("dirt");
+            _waterTexture = Content.Load<Texture2D>("water");
         }
 
         protected override void Update(GameTime gameTime) {
