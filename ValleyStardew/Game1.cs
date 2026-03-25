@@ -17,6 +17,20 @@ namespace ValleyStardew {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
+
+            // --- ВІКНО НА ВЕСЬ ЕКРАН (Borderless Window) ---
+
+            // 1. Беремо розміри монітора
+            _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width/2;
+            _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height/2;
+
+            // 2. ВИМИКАЄМО жорсткий повноекранний режим
+            _graphics.IsFullScreen = false;
+
+            // 3. Робимо вікно БЕЗ / З РАМКАМИ (прибираємо верхню смужку з хрестиком)
+            Window.IsBorderless = false;
+
+            _graphics.ApplyChanges();
         }
 
         protected override void Initialize() {
@@ -45,7 +59,7 @@ namespace ValleyStardew {
                 Exit();
 
             // Оновлюємо гравця (передаємо йому карту для розрахунку колізій)
-            _player.Update(_map);
+            _player.Update(_map, gameTime);
 
             // Оновлюємо камеру (передаємо їй координати гравця і розміри екрана)
             _camera.Update(_player.Position, _graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
@@ -57,7 +71,7 @@ namespace ValleyStardew {
             GraphicsDevice.Clear(Color.Black);
 
             // Використовуємо матрицю нашої камери
-            _spriteBatch.Begin(transformMatrix: _camera.Transform);
+            _spriteBatch.Begin(transformMatrix: _camera.Transform, samplerState: SamplerState.PointClamp);
 
             // Малюємо все по черзі
             _map.Draw(_spriteBatch);
