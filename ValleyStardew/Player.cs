@@ -7,6 +7,17 @@ using ValleyStardew;
 namespace ValleyStardew {
     public class Player {
         public Vector2 Position;
+
+        // Додаємо інвентар гравцеві
+        public Inventory PlayerInventory = new Inventory();
+        public Vector2 Center {
+            get {
+                return new Vector2(
+                    Position.X + (_characterTextureWidth / 2f),
+                    Position.Y + (_characterTextureHeight / 2f)
+                    );
+            }
+        }
         private Texture2D _texture;
         private float _speed = 4f;
 
@@ -39,6 +50,15 @@ namespace ValleyStardew {
         public void Update(Map map, GameTime gameTime) {
             var kstate = Keyboard.GetState();
             _isMoving = false;
+
+            // --- ВИБІР ІНСТРУМЕНТУ (Клавіші 1, 2, 3) ---
+            if (kstate.IsKeyDown(Keys.D1)) {
+                PlayerInventory.SelectSlot(0); // Вибираємо слот 0 (Сапка)
+            } else if (kstate.IsKeyDown(Keys.D2)) {
+                PlayerInventory.SelectSlot(1); // Вибираємо слот 1 (Насіння)
+            } else if (kstate.IsKeyDown(Keys.D3)) {
+                PlayerInventory.SelectSlot(2); // Вибираємо слот 2 (Рука)
+            }
 
             // --- 1. ЛОГІКА РУХУ ТА ВИБІР АНІМАЦІЇ ---
             // У моєму коді: 0 - Вниз, 1 - Вправо (і Вліво), 2 - Вгору. 
