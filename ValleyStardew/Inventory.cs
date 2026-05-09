@@ -1,46 +1,66 @@
 ﻿using System.Collections.Generic;
 
 namespace ValleyStardew {
-    // 1. Створюємо перелік (Enum) усіх можливих інструментів
-    public enum ToolType {
-        Hand, // Рука (для збору врожаю)
-        Hoe,  // Сапка (для оранки землі)
-        Seed  // Насіння (для посадки)
-    }
+    public enum ToolType { Hand, Hoe, Seed }
 
     public class Inventory {
-        // --- ЕКОНОМІКА ТА РЕСУРСИ ---
-        public int Money { get; set; } = 0;           // Гроші гравця
-        public int SeedsCount { get; set; } = 1;      // Початкове насіння (можеш змінити на 10 для тесту)
-        public int HarvestedCrops { get; set; } = 0;  // Кількість зібраного врожаю для продажу
+        public int Money { get; set; } = 1000;
 
-        // --- ЛОГІКА ТУЛБАРУ ---
-        // Список інструментів, які лежать у тулбарі
+        // --- НОВІ СЛОВНИКИ ДЛЯ РЕСУРСІВ ---
+        // Ключ - тип рослини, Значення - кількість
+        public Dictionary<CropType, int> Seeds { get; private set; }
+        public Dictionary<CropType, int> HarvestedCrops { get; private set; }
+
+        // Яке насіння зараз вибране для посадки (за замовчуванням - Ріпа)
+        public CropType SelectedSeedType { get; set; } = CropType.Wheat;
+
         public List<ToolType> Toolbar { get; private set; }
-
-        // Індекс поточного вибраного слота (починається з 0)
         public int ActiveSlotIndex { get; private set; } = 0;
+        public ToolType ActiveTool => Toolbar[ActiveSlotIndex];
 
         public Inventory() {
-            // При створенні інвентарю заповнюємо наш тулбар
-            Toolbar = new List<ToolType> {
-                ToolType.Hoe,   // Слот 0: Сапка (стандартно в руках на початку)
-                ToolType.Seed,  // Слот 1: Насіння
-                ToolType.Hand   // Слот 2: Рука
-            };
+            Toolbar = new List<ToolType> { ToolType.Hoe, ToolType.Seed, ToolType.Hand };
+            Seeds = new Dictionary<CropType, int>();
+            HarvestedCrops = new Dictionary<CropType, int>();
+
+            // На старті даємо 1 насінину Corn
+            Seeds[CropType.Wheat] = 1;
         }
 
-        // Зручна властивість, щоб завжди знати, що саме зараз тримає гравець
-        public ToolType ActiveTool {
-            get { return Toolbar[ActiveSlotIndex]; }
-        }
-
-        // Метод для перемикання слотів (наприклад, клавішами 1, 2, 3)
         public void SelectSlot(int index) {
-            // Перевіряємо, чи існує такий слот, щоб гра не вилетіла
-            if (index >= 0 && index < Toolbar.Count) {
-                ActiveSlotIndex = index;
-            }
+            if (index >= 0 && index < Toolbar.Count) ActiveSlotIndex = index;
+        }
+
+        // --- ЗРУЧНІ МЕТОДИ ДЛЯ РОБОТИ З РЕСУРСАМИ ---
+        public void AddSeed(CropType type, int amount) {
+            if (!Seeds.ContainsKey(type)) Seeds[type] = 0;
+            Seeds[type] += amount;
+        }
+
+        public bool HasSeed(CropType type) {
+            return Seeds.ContainsKey(type) && Seeds[type] > 0;
+        }
+
+        public void RemoveSeed(CropType type) {
+            if (HasSeed(type)) Seeds[type]--;
+        }
+
+        public void AddHarvest(CropType type, int amount) {
+            if (!HarvestedCrops.ContainsKey(type)) HarvestedCrops[type] = 0;
+            HarvestedCrops[type] += amount;
+        }
+
+        // --- МЕТОД ДЛЯ ПЕРЕМИКАННЯ НАСІННЯ ---
+        public void CycleSeedType() {
+            // Отримуємо масив усіх існуючих видів насіння
+            CropType[] allTypes = (CropType[])System.Enum.GetValues(typeof(CropType));
+
+            // Знаходимо, який індекс у поточного вибраного насіння
+            int currentIndex = System.Array.IndexOf(allTypes, SelectedSeedType);
+
+            // Беремо наступний індекс. Якщо дійшли до кінця - повертаємось на 0
+            int nextIndex = (currentIndex + 1) % allTypes.Length;
+            SelectedSeedType = allTypes[nextIndex];
         }
     }
 }

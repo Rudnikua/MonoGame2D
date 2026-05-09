@@ -12,13 +12,17 @@ namespace ValleyStardew {
 
         private SpriteFont _uiFont;
         private Texture2D _uiPixel;
-        private Texture2D _moneyIcon;
+        private Texture2D _moneyIcon, _iconHoe, _iconSeed, _iconHand;
+        private Texture2D _slotTexture, _slotSelectedTexture;
 
         private Point _hoveredTile; // Зберігатиме координати X та Y тайлу, на який дивиться мишка
         private bool _isTileInRange; // Буде true, якщо тайл у зоні 3х3 біля гравця
 
         private MouseState _previousMouseState;
         private KeyboardState _previousKeyboardState;
+
+        private TimeManager _timeManager;
+        private ShopManager _shopManager;
 
         // Наші нові об'єкти
         private Map _map;
@@ -33,14 +37,14 @@ namespace ValleyStardew {
             // --- ВІКНО НА ВЕСЬ ЕКРАН (Borderless Window) ---
 
             // 1. Беремо розміри монітора
-            _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width / 2;
-            _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2;
+            _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
+            _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
 
             // 2. ВИМИКАЄМО жорсткий повноекранний режим
-            _graphics.IsFullScreen = false;
+            _graphics.IsFullScreen = true;
 
             // 3. Робимо вікно БЕЗ / З РАМКАМИ (прибираємо верхню смужку з хрестиком)
-            Window.IsBorderless = false;
+            Window.IsBorderless = true;
 
             _graphics.ApplyChanges();
         }
@@ -50,6 +54,19 @@ namespace ValleyStardew {
             _map = new Map();
             _player = new Player();
             _camera = new Camera();
+
+            // --- НАЛАШТУВАННЯ ЧАСУ ---
+            _timeManager = new TimeManager();
+            _timeManager.RealSecondsPerHour = 0.2f; // CHANGE TIME SPEED HERE
+
+            // Підписуємося на подію нового дня: коли він настає, всі рослини ростуть
+            _timeManager.OnNewDay += () => {
+                foreach (var crop in _map.PlantedCrops.Values) {
+                    crop.Grow();
+                }
+            };
+
+            _shopManager = new ShopManager();
 
             // Ставимо гравця і камеру по центру
             _player.Position = new Vector2((_map.Width * _map.TileSize) / 2, (_map.Height * _map.TileSize) / 2);
@@ -75,9 +92,17 @@ namespace ValleyStardew {
             _uiPixel.SetData(new[] { Color.White });
 
             _moneyIcon = Content.Load<Texture2D>("Money");
+            _iconHoe = Content.Load<Texture2D>("Hoe");
+            _iconSeed = Content.Load<Texture2D>("Seeds");
+            _iconHand = Content.Load<Texture2D>("Hand");
+            _slotTexture = Content.Load<Texture2D>("Slot_UnSelected");
+            _slotSelectedTexture = Content.Load<Texture2D>("Slot_Selected");
         }
 
         protected override void Update(GameTime gameTime) {
+            // Оновлюємо годинник
+            _timeManager.Update(gameTime);
+
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
@@ -126,13 +151,41 @@ namespace ValleyStardew {
             // Тайл доступний, якщо мишка на карті І відстань по X та Y не більша за 1
             _isTileInRange = isHoveringMap && (distanceX <= 3 && distanceY <= 3);
 
+            // Оновлюємо магазин ПЕРЕД світом
+            _shopManager.Update(mouseState, _previousMouseState, _player.PlayerInventory);
+
+            // Якщо магазин ВІДКРИТИЙ - блокуємо фермерство!
+            if (!_shopManager.IsPlayerInputBlocked()) {
+                // Дозволяємо працювати інструментом
+                if (mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Released) {
+                    if (_isTileInRange) {
+                        _map.InteractWithTile(_hoveredTile.X, _hoveredTile.Y, _player.PlayerInventory);
+                    }
+                }
+            }
+
             // === ЛОГІКА КЛІКУ ПО ЗЕМЛІ ===
 
-            // Перевіряємо: Ліва кнопка ЗАРАЗ натиснута, але в МИНУЛОМУ кадрі була відпущена (це і є 1 клік)
+            // === ЛОГІКА КЛІКІВ (UI та Світ) ===
             if (mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Released) {
-                // Якщо клітинка підсвічена білим (у зоні дії)
-                if (_isTileInRange) {
-                    // Кажемо карті: "Гей, ми клікнули по цій клітинці з таким-то інструментом!"
+                // 1. Створюємо точку мишки для перевірки
+                Point mouseScreenPoint = new Point(mouseState.X, mouseState.Y);
+
+                // Ті самі координати кнопок, що й у методі Draw
+                Rectangle buyButtonRect = new Rectangle(20, 70, 180, 40);
+                Rectangle sellButtonRect = new Rectangle(20, 120, 180, 40);
+
+                bool clickedUI = false;
+
+                // 2. Перевіряємо клік по кнопці КУПИТИ
+                if (mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Released) {
+                    if (_isTileInRange) {
+                        _map.InteractWithTile(_hoveredTile.X, _hoveredTile.Y, _player.PlayerInventory);
+                    }
+                }
+
+                // 4. ЯКЩО МИ НЕ КЛІКНУЛИ ПО UI -> Дозволяємо взаємодію зі світом
+                if (!clickedUI && _isTileInRange) {
                     _map.InteractWithTile(_hoveredTile.X, _hoveredTile.Y, _player.PlayerInventory);
                 }
             }
@@ -189,6 +242,28 @@ namespace ValleyStardew {
             // Використовуємо звичайний Begin()
             _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
 
+            // --- НІЧНИЙ ОВЕРЛЕЙ ---
+            float darkness = _timeManager.CurrentDarkness;
+            if (darkness > 0f) {
+                // Створюємо прямокутник на весь екран
+                Rectangle screenRect = new Rectangle(0, 0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
+
+                // Малюємо його темно-синім кольором. 
+                // new Color(10, 10, 30) дасть приємний нічний синюватий відтінок замість брудного чорного
+                _spriteBatch.Draw(_uiPixel, screenRect, new Color(10, 10, 30) * darkness);
+            }
+
+            // --- ГОДИННИК ТА ДЕНЬ (Правий верхній кут) ---
+            string timeText = $"Day {_timeManager.Day} - {_timeManager.GetTimeString()}";
+
+            // Щоб текст завжди був у правому куті, ми беремо ширину екрана і віднімаємо 200 пікселів
+            Vector2 timePos = new Vector2(GraphicsDevice.Viewport.Width - 125, 20);
+
+            // Малюємо чорну тінь для кращої видимості тексту
+            _spriteBatch.DrawString(_uiFont, timeText, timePos + new Vector2(2, 2), Color.Black * 0.7f);
+            // Малюємо сам білий текст
+            _spriteBatch.DrawString(_uiFont, timeText, timePos, Color.White);
+
             // --- Економіка (Лівий верхній кут) ---
             // Малюємо іконку грошей
             Rectangle coinRect = new Rectangle(20, 20, 32, 32);
@@ -202,10 +277,11 @@ namespace ValleyStardew {
             // Y = 27 (трохи нижче, щоб текст був по центру іконки по вертикалі)
             _spriteBatch.DrawString(_uiFont, moneyText, new Vector2(62, 27), Color.Gold);
 
+            _shopManager.Draw(_spriteBatch, _uiPixel, _uiFont, _player.PlayerInventory);
 
             // --- Тулбар (Знизу по центру) ---
-            int slotSize = 64; // Розмір одного квадратика інвентарю
-            int spacing = 10;  // Відстань між квадратиками
+            int slotSize = 48; // Розмір одного квадратика інвентарю
+            int spacing = 8;  // Відстань між квадратиками
             int totalSlots = _player.PlayerInventory.Toolbar.Count;
 
             // Рахуємо ширину всього тулбара, щоб розмістити його рівно по центру екрана
@@ -215,23 +291,52 @@ namespace ValleyStardew {
 
             // Проходимося циклом по всіх слотах
             for (int i = 0; i < totalSlots; i++) {
-                // Рахуємо позицію для кожного квадратика
                 Rectangle slotRect = new Rectangle(startX + (slotSize + spacing) * i, startY, slotSize, slotSize);
 
-                // Якщо цей слот зараз активний (вибраний) - малюємо його жовтим, якщо ні - сірим
-                Color slotColor = (_player.PlayerInventory.ActiveSlotIndex == i) ? Color.Yellow : Color.DimGray;
+                // 1. ВИБИРАЄМО ТЕКСТУРУ РАМКИ
+                Texture2D currentSlotTex = (_player.PlayerInventory.ActiveSlotIndex == i) ? _slotSelectedTexture : _slotTexture;
 
-                // Малюємо фон слота (робимо його трохи прозорим)
-                _spriteBatch.Draw(_uiPixel, slotRect, slotColor * 0.6f);
+                // Малюємо рамку слота (Color.White, щоб не змінювати кольори художника)
+                _spriteBatch.Draw(currentSlotTex, slotRect, Color.White);
 
-                // Малюємо назву інструменту всередині слота
-                string toolName = _player.PlayerInventory.Toolbar[i].ToString();
-                _spriteBatch.DrawString(_uiFont, toolName, new Vector2(slotRect.X + 5, slotRect.Y + 20), Color.White);
+                // 2. МАЛЮЄМО ІКОНКУ ІНСТРУМЕНТУ
+                Texture2D toolIcon = null;
+                if (_player.PlayerInventory.Toolbar[i] == ToolType.Hoe) toolIcon = _iconHoe;
+                else if (_player.PlayerInventory.Toolbar[i] == ToolType.Seed) toolIcon = _iconSeed;
+                else if (_player.PlayerInventory.Toolbar[i] == ToolType.Hand) toolIcon = _iconHand;
 
-                // Якщо це слот з насінням, додатково малюємо його кількість
+                if (toolIcon != null) {
+                    // Центруємо іконку 32x32 всередині рамки 48x48
+                    // (48 - 32) / 2 = 8 пікселів відступу з кожного боку
+                    Vector2 iconPos = new Vector2(slotRect.X + 8, slotRect.Y + 8);
+                    _spriteBatch.Draw(toolIcon, iconPos, Color.White);
+                }
+
+                // 3. ІНФОРМАЦІЯ ПРО НАСІННЯ
                 if (_player.PlayerInventory.Toolbar[i] == ToolType.Seed) {
-                    string seedCount = $"x{_player.PlayerInventory.SeedsCount}";
-                    _spriteBatch.DrawString(_uiFont, seedCount, new Vector2(slotRect.X + 5, slotRect.Y + 40), Color.LimeGreen);
+                    int count = 0;
+                    if (_player.PlayerInventory.Seeds.ContainsKey(_player.PlayerInventory.SelectedSeedType)) {
+                        count = _player.PlayerInventory.Seeds[_player.PlayerInventory.SelectedSeedType];
+                    }
+
+                    // КІЛЬКІСТЬ (Внизу праворуч)
+                    string countText = count.ToString();
+                    Vector2 textSize = _uiFont.MeasureString(countText);
+                    // Робимо невеликий відступ від краю рамки (5 пікселів)
+                    Vector2 countPos = new Vector2(slotRect.Right - textSize.X - 5, slotRect.Bottom - textSize.Y - 2);
+
+                    _spriteBatch.DrawString(_uiFont, countText, countPos + new Vector2(1, 1), Color.Black);
+                    _spriteBatch.DrawString(_uiFont, countText, countPos, Color.White);
+
+                    // НАЗВА (Тільки якщо вибрано)
+                    if (_player.PlayerInventory.ActiveSlotIndex == i) {
+                        string seedName = _player.PlayerInventory.SelectedSeedType.ToString();
+                        Vector2 nameSize = _uiFont.MeasureString(seedName);
+                        Vector2 namePos = new Vector2(slotRect.Center.X - (nameSize.X / 2), slotRect.Top - nameSize.Y - 8);
+
+                        _spriteBatch.DrawString(_uiFont, seedName, namePos + new Vector2(1, 1), Color.Black);
+                        _spriteBatch.DrawString(_uiFont, seedName, namePos, Color.LimeGreen);
+                    }
                 }
             }
 

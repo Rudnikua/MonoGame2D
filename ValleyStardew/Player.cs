@@ -7,6 +7,7 @@ using ValleyStardew;
 namespace ValleyStardew {
     public class Player {
         public Vector2 Position;
+        private KeyboardState _previousKeyboardState;
 
         // Додаємо інвентар гравцеві
         public Inventory PlayerInventory = new Inventory();
@@ -58,6 +59,11 @@ namespace ValleyStardew {
                 PlayerInventory.SelectSlot(1); // Вибираємо слот 1 (Насіння)
             } else if (kstate.IsKeyDown(Keys.D3)) {
                 PlayerInventory.SelectSlot(2); // Вибираємо слот 2 (Рука)
+            }
+
+            // --- ПЕРЕМИКАННЯ НАСІННЯ (Клавіша Q) ---
+            if (kstate.IsKeyDown(Keys.Q) && _previousKeyboardState.IsKeyUp(Keys.Q)) {
+                PlayerInventory.CycleSeedType();
             }
 
             // --- 1. ЛОГІКА РУХУ ТА ВИБІР АНІМАЦІЇ ---
@@ -121,6 +127,8 @@ namespace ValleyStardew {
                 Position.X = clampedX;
                 Position.Y = clampedYfeet - (_characterTextureHeight - feetHeight);
             }
+
+            _previousKeyboardState = kstate;
         }
 
         public void Draw(SpriteBatch spriteBatch) {

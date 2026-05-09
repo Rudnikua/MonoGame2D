@@ -1,25 +1,36 @@
-﻿namespace ValleyStardew {
-    // Список усіх видів насіння у грі
+﻿using System.Collections.Generic;
+
+namespace ValleyStardew {
     public enum CropType {
-        Corn, // Наприклад, Ріпа (базова рослина)
-        // Сюди потім додаси Tomato, Potato тощо
+        Wheat,
+        Carrot // Додали новий вид для майбутнього
+    }
+
+    // Структура, яка містить характеристики рослини
+    public struct CropData {
+        public string Name;
+        public int SeedPrice;
+        public int SellPrice;
     }
 
     public class Crop {
+        // СТАТИЧНА БАЗА ДАНИХ. Тут ми налаштовуємо всі ціни гри!
+        public static readonly Dictionary<CropType, CropData> Database = new Dictionary<CropType, CropData> {
+            { CropType.Wheat, new CropData { Name = "Wheat", SeedPrice = 10, SellPrice = 15 } },
+            { CropType.Carrot, new CropData { Name = "Carrot", SeedPrice = 12, SellPrice = 20 } }
+        };
+
         public CropType Type;
-        public int CurrentPhase; // 0 = щойно посадили, 1 = паросток, 2 = готово
-        public int MaxPhase = 2; // Максимальна фаза росту
+        public int CurrentPhase;
+        public int MaxPhase = 2;
 
         public Crop(CropType type) {
             Type = type;
-            CurrentPhase = 0; // Завжди починаємо з насіння
+            CurrentPhase = 0;
         }
 
-        // Метод, який буде викликатися, коли настає новий день
         public void Grow() {
-            if (CurrentPhase < MaxPhase) {
-                CurrentPhase++;
-            }
+            if (CurrentPhase < MaxPhase) CurrentPhase++;
         }
 
         public bool IsReadyToHarvest() {

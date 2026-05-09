@@ -10,8 +10,11 @@ namespace ValleyStardew {
         public int Height { get; private set; } = 50;
 
         private int[,] _tileMap;
-        public Dictionary<Point, Crop> PlantedCrops {get; private set;} = new Dictionary<Point, Crop>();
-        private Texture2D _cropPhase0, _cropPhase1, _cropPhase2;
+        public Dictionary<Point, Crop> PlantedCrops { get; private set; } = new Dictionary<Point, Crop>();
+
+        private Texture2D _wheatPhase0, _wheatPhase1, _wheatPhase2;
+        private Texture2D _cropPhase0, _cropPhase1, _cropPhase2; // ЗАМІНИТИ КОЛИ БУДУТЬ СПРАЙТИ ДЛЯ МОРКВИ
+
         private Texture2D _grassTexture, _dirtTexture, _waterTexture;
 
         public Map() {
@@ -31,7 +34,12 @@ namespace ValleyStardew {
             _dirtTexture = content.Load<Texture2D>("dirt");
             _waterTexture = content.Load<Texture2D>("water");
 
-            // Corn 3 phases
+            // Wheat 3 phases
+            _wheatPhase0 = content.Load<Texture2D>("Wheat_Stage1"); 
+            _wheatPhase1 = content.Load<Texture2D>("Wheat_Stage2");
+            _wheatPhase2 = content.Load<Texture2D>("Wheat_Stage3");
+
+            // Carrot 3 phases
             _cropPhase0 = content.Load<Texture2D>("1Stage_Seed"); // Зерна на землі
             _cropPhase1 = content.Load<Texture2D>("2Stage_Seed"); // sprout (паросток)
             _cropPhase2 = content.Load<Texture2D>("3Stage_Seed"); // Готовий врожай
@@ -51,23 +59,20 @@ namespace ValleyStardew {
             }
             // 2. НАСІННЯ (Садимо)
             else if (activeTool == ToolType.Seed) {
-                // Якщо земля зорана (1), насіння є в інвентарі, і на цій клітинці ЩЕ НЕМАЄ рослини
-                if (currentTile == 1 && inventory.SeedsCount > 0 && !PlantedCrops.ContainsKey(tilePoint)) {
-                    // Садимо базову рослину (Corn)
-                    PlantedCrops.Add(tilePoint, new Crop(CropType.Corn));
-                    inventory.SeedsCount--;
+                // Перевіряємо, чи є в нас вибране насіння за допомогою нового методу
+                if (currentTile == 1 && inventory.HasSeed(inventory.SelectedSeedType) && !PlantedCrops.ContainsKey(tilePoint)) {
+                    PlantedCrops.Add(tilePoint, new Crop(inventory.SelectedSeedType));
+                    inventory.RemoveSeed(inventory.SelectedSeedType); // Віднімаємо насінину
                 }
             }
             // 3. РУКА (Збираємо врожай)
             else if (activeTool == ToolType.Hand) {
-                // Якщо на цій клітинці є рослина
                 if (PlantedCrops.ContainsKey(tilePoint)) {
                     Crop targetCrop = PlantedCrops[tilePoint];
-
-                    // Збираємо ТІЛЬКИ якщо вона виросла (CurrentPhase == 2)
                     if (targetCrop.IsReadyToHarvest()) {
-                        PlantedCrops.Remove(tilePoint); // Видаляємо з карти
-                        inventory.HarvestedCrops++;     // Додаємо в інвентар
+                        PlantedCrops.Remove(tilePoint);
+                        // Додаємо зібраний врожай до словника, враховуючи його тип!
+                        inventory.AddHarvest(targetCrop.Type, 1);
                     }
                 }
             }
@@ -93,11 +98,20 @@ namespace ValleyStardew {
                 Crop crop = item.Value;
                 Vector2 pos = new Vector2(pt.X * TileSize, pt.Y * TileSize);
 
-                Texture2D cropTex = _cropPhase0; // За замовчуванням насіння
-                if (crop.CurrentPhase == 1) cropTex = _cropPhase1;
-                else if (crop.CurrentPhase == 2) cropTex = _cropPhase2;
+                Texture2D cropTex = null;
 
-                spriteBatch.Draw(cropTex, pos, Color.White);
+                if (crop.Type == CropType.Wheat) {
+                    if (crop.CurrentPhase == 0) spriteBatch.Draw(_wheatPhase0, pos, Color.White);
+                    else if (crop.CurrentPhase == 1) spriteBatch.Draw(_wheatPhase1, pos, Color.White);
+                    else if (crop.CurrentPhase == 2) spriteBatch.Draw(_wheatPhase2, pos, Color.White);
+                } else {
+                    if (crop.CurrentPhase == 0) spriteBatch.Draw(_cropPhase0, pos, Color.White);
+                    else if (crop.CurrentPhase == 1) spriteBatch.Draw(_cropPhase1, pos, Color.White);
+                    else if (crop.CurrentPhase == 2) spriteBatch.Draw(_cropPhase2, pos, Color.White);
+                }
+
+                if (cropTex != null)
+                    spriteBatch.Draw(cropTex, pos, Color.White);
             }
         }
     }
