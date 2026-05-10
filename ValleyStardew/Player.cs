@@ -9,6 +9,9 @@ namespace ValleyStardew {
         public Vector2 Position;
         private KeyboardState _previousKeyboardState;
 
+        private float _stepTimer = 0f;
+        private const float StepInterval = 0.4f; // Час між кроками (в секундах). Зміни, якщо кроки зашвидкі/заповільні
+
         // Додаємо інвентар гравцеві
         public Inventory PlayerInventory = new Inventory();
         public Vector2 Center {
@@ -106,8 +109,15 @@ namespace ValleyStardew {
                     }
                     _animationTimer = 0f;
                 }
+
+                _stepTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+                if (_stepTimer > StepInterval) {
+                    SoundManager.PlayWalk();
+                    _stepTimer = 0f;
+                }
             } else {
                 _currentFrame = 0;
+                _stepTimer = StepInterval;
             }
 
             // --- 3. КОЛІЗІЇ З МЕЖАМИ КАРТИ ---

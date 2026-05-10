@@ -56,12 +56,14 @@ namespace ValleyStardew {
             // 1. САПКА (Оремо землю)
             if (activeTool == ToolType.Hoe) {
                 if (currentTile == 0) _tileMap[y, x] = 1;
+                SoundManager.DirtWork.Play();
             }
             // 2. НАСІННЯ (Садимо)
             else if (activeTool == ToolType.Seed) {
                 // Перевіряємо, чи є в нас вибране насіння за допомогою нового методу
                 if (currentTile == 1 && inventory.HasSeed(inventory.SelectedSeedType) && !PlantedCrops.ContainsKey(tilePoint)) {
                     PlantedCrops.Add(tilePoint, new Crop(inventory.SelectedSeedType));
+                    SoundManager.PlantSeed.Play();
                     inventory.RemoveSeed(inventory.SelectedSeedType); // Віднімаємо насінину
                 }
             }
@@ -71,6 +73,7 @@ namespace ValleyStardew {
                     Crop targetCrop = PlantedCrops[tilePoint];
                     if (targetCrop.IsReadyToHarvest()) {
                         PlantedCrops.Remove(tilePoint);
+                        SoundManager.HandCollect.Play();
                         // Додаємо зібраний врожай до словника, враховуючи його тип!
                         inventory.AddHarvest(targetCrop.Type, 1);
                     }

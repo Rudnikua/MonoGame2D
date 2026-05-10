@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Media;
 using System;
 using ValleyStardew;
 
@@ -12,8 +13,9 @@ namespace ValleyStardew {
 
         private SpriteFont _uiFont;
         private Texture2D _uiPixel;
-        private Texture2D _moneyIcon, _iconHoe, _iconSeed, _iconHand;
-        private Texture2D _slotTexture, _slotSelectedTexture;
+
+        private Texture2D _iconHoe, _iconSeed, _iconHand, _slotTexture, _slotSelectedTexture; // ToolBar UI
+        private Texture2D _moneyIcon, _btnFrame; // Shop UI
 
         private Point _hoveredTile; // Зберігатиме координати X та Y тайлу, на який дивиться мишка
         private bool _isTileInRange; // Буде true, якщо тайл у зоні 3х3 біля гравця
@@ -92,11 +94,20 @@ namespace ValleyStardew {
             _uiPixel.SetData(new[] { Color.White });
 
             _moneyIcon = Content.Load<Texture2D>("Money");
+            _btnFrame = Content.Load<Texture2D>("ButtonMenuShop");
             _iconHoe = Content.Load<Texture2D>("Hoe");
             _iconSeed = Content.Load<Texture2D>("Seeds");
             _iconHand = Content.Load<Texture2D>("Hand");
             _slotTexture = Content.Load<Texture2D>("Slot_UnSelected");
             _slotSelectedTexture = Content.Load<Texture2D>("Slot_Selected");
+
+            // Завантажуємо всі звуки через наш новий менеджер
+            SoundManager.LoadContent(Content);
+
+            // Вмикаємо фонову музику
+            MediaPlayer.Play(SoundManager.BackgroundMusic);
+            MediaPlayer.IsRepeating = true; // Щоб музика грала по колу
+            MediaPlayer.Volume = 0.3f; // Робимо музику тихою, щоб не перебивала ефекти
         }
 
         protected override void Update(GameTime gameTime) {
@@ -277,7 +288,7 @@ namespace ValleyStardew {
             // Y = 27 (трохи нижче, щоб текст був по центру іконки по вертикалі)
             _spriteBatch.DrawString(_uiFont, moneyText, new Vector2(62, 27), Color.Gold);
 
-            _shopManager.Draw(_spriteBatch, _uiPixel, _uiFont, _player.PlayerInventory);
+            _shopManager.Draw(_spriteBatch, _uiPixel, _btnFrame, _uiFont, _player.PlayerInventory);
 
             // --- Тулбар (Знизу по центру) ---
             int slotSize = 48; // Розмір одного квадратика інвентарю

@@ -4,16 +4,29 @@ using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 
 namespace ValleyStardew {
+    // Оголошення станів магазину
     public enum ShopState { Closed, MainMenu, BuyPanel, SellPanel }
+
     public class ShopManager {
         public ShopState CurrentState { get; private set; } = ShopState.Closed;
 
         private Rectangle _shopIconRect = new Rectangle(20, 70, 48, 48);
-        private Rectangle _buyMenuBtnRect = new Rectangle(80, 70, 100, 30);
-        private Rectangle _sellMenuBtnRect = new Rectangle(80, 110, 100, 30);
-        private Rectangle _closeMenuBtnRect = new Rectangle(80, 150, 100, 30);
-        private Rectangle _closePanelBtnRect = new Rectangle(320, 50, 30, 30);
-        private Rectangle _panelRect = new Rectangle(50, 50, 300, 400);
+
+        // Кнопки головного меню (X = 80)
+        private Rectangle _buyMenuBtnRect = new Rectangle(80, 70, 96, 48);
+        private Rectangle _sellMenuBtnRect = new Rectangle(80, 125, 96, 48);
+        private Rectangle _closeMenuBtnRect = new Rectangle(80, 180, 96, 48);
+
+        // Основна панель (X = 80, щоб співпадати з кнопками)
+        private Rectangle _panelRect = new Rectangle(80, 50, 320, 420);
+
+        // Кнопка закриття (32x32) справа зверху панелі з відступом
+        private Rectangle _closePanelBtnRect => new Rectangle(
+            _panelRect.Right - 32 - 10,
+            _panelRect.Top + 10,
+            32,
+            32
+        );
 
         public void Update(MouseState mouseState, MouseState previousMouseState, Inventory inventory) {
             bool clicked = mouseState.LeftButton == ButtonState.Pressed && previousMouseState.LeftButton == ButtonState.Released;
@@ -23,53 +36,59 @@ namespace ValleyStardew {
 
             switch (CurrentState) {
                 case ShopState.Closed:
-                    if (_shopIconRect.Contains(mousePos)) CurrentState = ShopState.MainMenu;
-                    break;
+                    if (_shopIconRect.Contains(mousePos)) {
+                        SoundManager.ClickSound.Play();
+                        CurrentState = ShopState.MainMenu;
+                    }
+                        break;
 
                 case ShopState.MainMenu:
-                    if (_buyMenuBtnRect.Contains(mousePos)) CurrentState = ShopState.BuyPanel;
-                    else if (_sellMenuBtnRect.Contains(mousePos)) CurrentState = ShopState.SellPanel;
-                    else if (_closeMenuBtnRect.Contains(mousePos)) CurrentState = ShopState.Closed;
-                    break;
+                    if (_buyMenuBtnRect.Contains(mousePos)) {
+                        SoundManager.ClickSound.Play();
+                        CurrentState = ShopState.BuyPanel;
+                    } else if (_sellMenuBtnRect.Contains(mousePos)) {
+                        SoundManager.ClickSound.Play();
+                        CurrentState = ShopState.SellPanel;
+                    } else if (_closeMenuBtnRect.Contains(mousePos)) {
+                        SoundManager.ClickSound.Play();
+                        CurrentState = ShopState.Closed;
+                    }
+                        break;
 
                 case ShopState.BuyPanel:
-                    if (_closePanelBtnRect.Contains(mousePos)) CurrentState = ShopState.MainMenu;
-                    else {
-                        // Логіка кліку по кнопках КУПІВЛІ
-                        int yBuyOffset = _panelRect.Y + 60;
-                        foreach (var kvp in Crop.Database) {
-                            Rectangle btnRect = new Rectangle(_panelRect.X + 220, yBuyOffset, 60, 30);
-
-                            // Якщо клікнули на цю конкретну кнопку і є гроші
-                            if (btnRect.Contains(mousePos) && inventory.Money >= kvp.Value.SeedPrice) {
-                                inventory.Money -= kvp.Value.SeedPrice;
-                                inventory.AddSeed(kvp.Key, 1);
-                            }
-                            yBuyOffset += 45; // Зсуваємось вниз для наступного товару
-                        }
-                    }
-                    break;
-
                 case ShopState.SellPanel:
-                    if (_closePanelBtnRect.Contains(mousePos)) CurrentState = ShopState.MainMenu;
-                    else {
-                        // Логіка кліку по кнопках ПРОДАЖУ
-                        int ySellOffset = _panelRect.Y + 60;
-                        foreach (var kvp in inventory.HarvestedCrops) {
-                            if (kvp.Value <= 0) continue; // Пропускаємо, якщо цього врожаю немає
-
-                            Rectangle btnRect = new Rectangle(_panelRect.X + 220, ySellOffset, 60, 30);
-
-                            // Якщо клікнули продати
-                            if (btnRect.Contains(mousePos)) {
-                                int totalEarnings = kvp.Value * Crop.Database[kvp.Key].SellPrice;
-                                inventory.Money += totalEarnings;
-                                inventory.HarvestedCrops[kvp.Key] = 0; // Обнуляємо цей врожай
-                            }
-                            ySellOffset += 45;
-                        }
+                    if (_closePanelBtnRect.Contains(mousePos)) {
+                        SoundManager.ClickSound.Play();
+                        CurrentState = ShopState.MainMenu;
+                    } else {
+                        SoundManager.ClickSound.Play();
+                        UpdatePanelInteractions(mousePos, inventory);
                     }
                     break;
+            }
+        }
+
+        private void UpdatePanelInteractions(Point mousePos, Inventory inventory) {
+            int yOffset = _panelRect.Y + 75;
+            if (CurrentState == ShopState.BuyPanel) {
+                foreach (var kvp in Crop.Database) {
+                    Rectangle btnRect = new Rectangle(_panelRect.X + 200, yOffset, 96, 48);
+                    if (btnRect.Contains(mousePos) && inventory.Money >= kvp.Value.SeedPrice) {
+                        inventory.Money -= kvp.Value.SeedPrice;
+                        inventory.AddSeed(kvp.Key, 1);
+                    }
+                    yOffset += 55;
+                }
+            } else if (CurrentState == ShopState.SellPanel) {
+                foreach (var kvp in inventory.HarvestedCrops) {
+                    if (kvp.Value <= 0) continue;
+                    Rectangle btnRect = new Rectangle(_panelRect.X + 200, yOffset, 96, 48);
+                    if (btnRect.Contains(mousePos)) {
+                        inventory.Money += kvp.Value * Crop.Database[kvp.Key].SellPrice;
+                        inventory.HarvestedCrops[kvp.Key] = 0;
+                    }
+                    yOffset += 55;
+                }
             }
         }
 
@@ -77,67 +96,72 @@ namespace ValleyStardew {
             return CurrentState != ShopState.Closed;
         }
 
-        public void Draw(SpriteBatch spriteBatch, Texture2D uiPixel, SpriteFont font, Inventory inventory) {
-            // 1. Іконка
+        public void Draw(SpriteBatch spriteBatch, Texture2D uiPixel, Texture2D btnTexture, SpriteFont font, Inventory inventory) {
+            // Малюємо іконку магазину (завжди видима)
             spriteBatch.Draw(uiPixel, _shopIconRect, Color.Purple);
             spriteBatch.DrawString(font, "Shop", new Vector2(_shopIconRect.X + 5, _shopIconRect.Y + 15), Color.White);
 
-            // 2. Головне меню
             if (CurrentState == ShopState.MainMenu) {
-                DrawButton(spriteBatch, uiPixel, font, _buyMenuBtnRect, "Buy", Color.Blue);
-                DrawButton(spriteBatch, uiPixel, font, _sellMenuBtnRect, "Sell", Color.Green);
-                DrawButton(spriteBatch, uiPixel, font, _closeMenuBtnRect, "Close", Color.Red);
-            }
-            // 3. Панель Купівлі
-            else if (CurrentState == ShopState.BuyPanel) {
-                spriteBatch.Draw(uiPixel, _panelRect, Color.DarkBlue * 0.9f);
-                DrawButton(spriteBatch, uiPixel, font, _closePanelBtnRect, "X", Color.Red);
-                spriteBatch.DrawString(font, "--- BUY SEEDS ---", new Vector2(_panelRect.X + 20, _panelRect.Y + 20), Color.White);
+                DrawButton(spriteBatch, btnTexture, font, _buyMenuBtnRect, "Buy");
+                DrawButton(spriteBatch, btnTexture, font, _sellMenuBtnRect, "Sell");
+                DrawButton(spriteBatch, btnTexture, font, _closeMenuBtnRect, "Close");
+            } else if (CurrentState == ShopState.BuyPanel || CurrentState == ShopState.SellPanel) {
+                // Малюємо фон панелі
+                DrawNineSlice(spriteBatch, btnTexture, _panelRect, 12);
 
-                int yOffset = _panelRect.Y + 60;
-                foreach (var kvp in Crop.Database) {
-                    CropData data = kvp.Value;
-                    // Пишемо Назву і Ціну
-                    spriteBatch.DrawString(font, $"{data.Name} Seed ({data.SeedPrice}$)", new Vector2(_panelRect.X + 20, yOffset + 5), Color.White);
-                    // Малюємо кнопку КУПИТИ
-                    DrawButton(spriteBatch, uiPixel, font, new Rectangle(_panelRect.X + 220, yOffset, 60, 30), "Buy", Color.CornflowerBlue);
+                // Кнопка закриття
+                spriteBatch.Draw(uiPixel, _closePanelBtnRect, Color.Red);
+                Vector2 xSize = font.MeasureString("X");
+                Vector2 xPos = new Vector2(
+                    _closePanelBtnRect.X + (_closePanelBtnRect.Width - xSize.X) / 2,
+                    _closePanelBtnRect.Y + (_closePanelBtnRect.Height - xSize.Y) / 2
+                );
+                spriteBatch.DrawString(font, "X", xPos, Color.White);
 
-                    yOffset += 45;
-                }
-            }
-            // 4. Панель Продажу
-            else if (CurrentState == ShopState.SellPanel) {
-                spriteBatch.Draw(uiPixel, _panelRect, Color.DarkGreen * 0.9f);
-                DrawButton(spriteBatch, uiPixel, font, _closePanelBtnRect, "X", Color.Red);
-                spriteBatch.DrawString(font, "--- SELL CROPS ---", new Vector2(_panelRect.X + 20, _panelRect.Y + 20), Color.White);
+                string title = (CurrentState == ShopState.BuyPanel) ? "--- BUY SEEDS ---" : "--- SELL CROPS ---";
+                spriteBatch.DrawString(font, title, new Vector2(_panelRect.X + 30, _panelRect.Y + 30), Color.Gold);
 
-                int yOffset = _panelRect.Y + 60;
-                bool hasAnythingToSell = false;
-
-                foreach (var kvp in inventory.HarvestedCrops) {
-                    if (kvp.Value <= 0) continue;
-
-                    hasAnythingToSell = true;
-                    CropData data = Crop.Database[kvp.Key];
-                    int totalValue = kvp.Value * data.SellPrice;
-
-                    // Пишемо Назву, Кількість і Загальну вартість
-                    spriteBatch.DrawString(font, $"{data.Name} x{kvp.Value} ({totalValue}$)", new Vector2(_panelRect.X + 20, yOffset + 5), Color.White);
-                    // Малюємо кнопку ПРОДАТИ ВСЕ
-                    DrawButton(spriteBatch, uiPixel, font, new Rectangle(_panelRect.X + 220, yOffset, 60, 30), "Sell", Color.LimeGreen);
-
-                    yOffset += 45;
-                }
-
-                if (!hasAnythingToSell) {
-                    spriteBatch.DrawString(font, "Your inventory is empty.", new Vector2(_panelRect.X + 20, yOffset + 10), Color.Gray);
+                int yOffset = _panelRect.Y + 75;
+                if (CurrentState == ShopState.BuyPanel) {
+                    foreach (var kvp in Crop.Database) {
+                        spriteBatch.DrawString(font, $"{kvp.Value.Name}\n{kvp.Value.SeedPrice}$", new Vector2(_panelRect.X + 30, yOffset), Color.White);
+                        DrawButton(spriteBatch, btnTexture, font, new Rectangle(_panelRect.X + 200, yOffset, 96, 48), "Get");
+                        yOffset += 55;
+                    }
+                } else {
+                    foreach (var kvp in inventory.HarvestedCrops) {
+                        if (kvp.Value <= 0) continue;
+                        int totalValue = kvp.Value * Crop.Database[kvp.Key].SellPrice;
+                        spriteBatch.DrawString(font, $"{kvp.Key} x{kvp.Value}\nTotal: {totalValue}$", new Vector2(_panelRect.X + 30, yOffset), Color.White);
+                        DrawButton(spriteBatch, btnTexture, font, new Rectangle(_panelRect.X + 200, yOffset, 96, 48), "Sell All");
+                        yOffset += 55;
+                    }
                 }
             }
         }
 
-        private void DrawButton(SpriteBatch sb, Texture2D tex, SpriteFont font, Rectangle rect, string text, Color color) {
-            sb.Draw(tex, rect, color);
-            sb.DrawString(font, text, new Vector2(rect.X + 10, rect.Y + 5), Color.White);
+        private void DrawButton(SpriteBatch sb, Texture2D tex, SpriteFont font, Rectangle rect, string text) {
+            DrawNineSlice(sb, tex, rect, 12);
+            Vector2 textSize = font.MeasureString(text);
+            Vector2 textPos = new Vector2(rect.X + (rect.Width - textSize.X) / 2, rect.Y + (rect.Height - textSize.Y) / 2);
+            sb.DrawString(font, text, textPos, Color.White);
+        }
+
+        private void DrawNineSlice(SpriteBatch sb, Texture2D tex, Rectangle targetRect, int thickness) {
+            int w = tex.Width;
+            int h = tex.Height;
+            // Кути
+            sb.Draw(tex, new Rectangle(targetRect.Left, targetRect.Top, thickness, thickness), new Rectangle(0, 0, thickness, thickness), Color.White);
+            sb.Draw(tex, new Rectangle(targetRect.Right - thickness, targetRect.Top, thickness, thickness), new Rectangle(w - thickness, 0, thickness, thickness), Color.White);
+            sb.Draw(tex, new Rectangle(targetRect.Left, targetRect.Bottom - thickness, thickness, thickness), new Rectangle(0, h - thickness, thickness, thickness), Color.White);
+            sb.Draw(tex, new Rectangle(targetRect.Right - thickness, targetRect.Bottom - thickness, thickness, thickness), new Rectangle(w - thickness, h - thickness, thickness, thickness), Color.White);
+            // Краї
+            sb.Draw(tex, new Rectangle(targetRect.Left + thickness, targetRect.Top, targetRect.Width - 2 * thickness, thickness), new Rectangle(thickness, 0, w - 2 * thickness, thickness), Color.White);
+            sb.Draw(tex, new Rectangle(targetRect.Left + thickness, targetRect.Bottom - thickness, targetRect.Width - 2 * thickness, thickness), new Rectangle(thickness, h - thickness, w - 2 * thickness, thickness), Color.White);
+            sb.Draw(tex, new Rectangle(targetRect.Left, targetRect.Top + thickness, thickness, targetRect.Height - 2 * thickness), new Rectangle(0, thickness, thickness, h - 2 * thickness), Color.White);
+            sb.Draw(tex, new Rectangle(targetRect.Right - thickness, targetRect.Top + thickness, thickness, targetRect.Height - 2 * thickness), new Rectangle(w - thickness, thickness, thickness, h - 2 * thickness), Color.White);
+            // Центр
+            sb.Draw(tex, new Rectangle(targetRect.Left + thickness, targetRect.Top + thickness, targetRect.Width - 2 * thickness, targetRect.Height - 2 * thickness), new Rectangle(thickness, thickness, w - 2 * thickness, h - 2 * thickness), Color.White);
         }
     }
 }

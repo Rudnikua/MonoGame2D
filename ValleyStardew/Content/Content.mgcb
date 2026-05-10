@@ -49,6 +49,30 @@
 /processorParam:TextureFormat=Color
 /build:3Stage_Seed.png
 
+#begin ButtonMenuShop.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:ButtonMenuShop.png
+
+#begin Click_Sound.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Click_Sound.wav
+
+#begin Dirt_work.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Dirt_work.wav
+
 #begin dirt.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -79,6 +103,12 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:grass.png
+
+#begin Hand_Collect.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Hand_Collect.wav
 
 #begin Hand.png
 /importer:TextureImporter
@@ -128,6 +158,18 @@
 /processorParam:TextureFormat=Color
 /build:MovementTest3.png
 
+#begin Overworld.mp3
+/importer:Mp3Importer
+/processor:SongProcessor
+/processorParam:Quality=Best
+/build:Overworld.mp3
+
+#begin Plant_Seeds.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Plant_Seeds.wav
+
 #begin player.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -175,6 +217,42 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Slot_UnSelected.png
+
+#begin Walk1.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Walk1.wav
+
+#begin Walk2.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Walk2.wav
+
+#begin Walk3.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Walk3.wav
+
+#begin Walk4.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Walk4.wav
+
+#begin Walk5.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Walk5.wav
+
+#begin Walk6.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Walk6.wav
 
 #begin water.png
 /importer:TextureImporter
