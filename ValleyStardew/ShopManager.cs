@@ -96,10 +96,10 @@ namespace ValleyStardew {
             return CurrentState != ShopState.Closed;
         }
 
-        public void Draw(SpriteBatch spriteBatch, Texture2D uiPixel, Texture2D btnTexture, SpriteFont font, Inventory inventory) {
+        public void Draw(SpriteBatch spriteBatch, Texture2D uiPixel, Texture2D btnTexture, Texture2D shopIcon, SpriteFont font, Inventory inventory) {
             // Малюємо іконку магазину (завжди видима)
-            spriteBatch.Draw(uiPixel, _shopIconRect, Color.Purple);
-            spriteBatch.DrawString(font, "Shop", new Vector2(_shopIconRect.X + 5, _shopIconRect.Y + 15), Color.White);
+            spriteBatch.Draw(shopIcon, _shopIconRect, Color.White);
+           //  spriteBatch.DrawString(font, "Shop", new Vector2(_shopIconRect.X + 5, _shopIconRect.Y + 15), Color.White);
 
             if (CurrentState == ShopState.MainMenu) {
                 DrawButton(spriteBatch, btnTexture, font, _buyMenuBtnRect, "Buy");

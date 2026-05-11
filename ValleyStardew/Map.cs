@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using System.Collections.Generic;
+using System; // Потрібно для генератора випадкових чисел
 
 namespace ValleyStardew {
     public class Map {
@@ -12,19 +13,21 @@ namespace ValleyStardew {
         private int[,] _tileMap;
         public Dictionary<Point, Crop> PlantedCrops { get; private set; } = new Dictionary<Point, Crop>();
 
+        // Спрайти для всіх рослин
         private Texture2D _wheatPhase0, _wheatPhase1, _wheatPhase2;
-        private Texture2D _cropPhase0, _cropPhase1, _cropPhase2; // ЗАМІНИТИ КОЛИ БУДУТЬ СПРАЙТИ ДЛЯ МОРКВИ
+        private Texture2D _carrotPhase0, _carrotPhase1, _carrotPhase2;
+        private Texture2D _tomatoPhase0, _tomatoPhase1, _tomatoPhase2;
 
         private Texture2D _grassTexture, _dirtTexture, _waterTexture;
+        private Random _random = new Random(); // Генератор для шансу насіння
 
         public Map() {
-            // Генерація карти при створенні об'єкта
             _tileMap = new int[Height, Width];
             for (int y = 0; y < Height; y++) {
                 for (int x = 0; x < Width; x++) {
-                    _tileMap[y, x] = 0; // Трава
+                    _tileMap[y, x] = 0;
                     if (x == 0 || y == 0 || x == Width - 1 || y == Height - 1)
-                        _tileMap[y, x] = 2; // Вода по краях
+                        _tileMap[y, x] = 2;
                 }
             }
         }
@@ -34,54 +37,66 @@ namespace ValleyStardew {
             _dirtTexture = content.Load<Texture2D>("dirt");
             _waterTexture = content.Load<Texture2D>("water");
 
-            // Wheat 3 phases
-            _wheatPhase0 = content.Load<Texture2D>("Wheat_Stage1"); 
+            // Пшениця
+            _wheatPhase0 = content.Load<Texture2D>("Wheat_Stage1");
             _wheatPhase1 = content.Load<Texture2D>("Wheat_Stage2");
             _wheatPhase2 = content.Load<Texture2D>("Wheat_Stage3");
 
-            // Carrot 3 phases
-            _cropPhase0 = content.Load<Texture2D>("1Stage_Seed"); // Зерна на землі
-            _cropPhase1 = content.Load<Texture2D>("2Stage_Seed"); // sprout (паросток)
-            _cropPhase2 = content.Load<Texture2D>("3Stage_Seed"); // Готовий врожай
+            // Морква (Заміни назви файлів на ті, що дав художник)
+            _carrotPhase0 = content.Load<Texture2D>("Carrot_Stage1");
+            _carrotPhase1 = content.Load<Texture2D>("Carrot_Stage2");
+            _carrotPhase2 = content.Load<Texture2D>("Carrot_Stage3");
+
+            // Помідори (Заміни назви файлів на ті, що дав художник)
+            _tomatoPhase0 = content.Load<Texture2D>("Tomato_Stage1");
+            _tomatoPhase1 = content.Load<Texture2D>("Tomato_Stage2");
+            _tomatoPhase2 = content.Load<Texture2D>("Tomato_Stage3");
         }
 
-        // Метод для взаємодії із землею
         public void InteractWithTile(int x, int y, Inventory inventory) {
             if (x < 0 || x >= Width || y < 0 || y >= Height) return;
 
             int currentTile = _tileMap[y, x];
-            Point tilePoint = new Point(x, y); // Створюємо точку для перевірки у словнику
+            Point tilePoint = new Point(x, y);
             ToolType activeTool = inventory.ActiveTool;
 
-            // 1. САПКА (Оремо землю)
+            // 1. САПКА
             if (activeTool == ToolType.Hoe) {
                 if (currentTile == 0) _tileMap[y, x] = 1;
                 SoundManager.DirtWork.Play();
             }
-            // 2. НАСІННЯ (Садимо)
+            // 2. НАСІННЯ
             else if (activeTool == ToolType.Seed) {
-                // Перевіряємо, чи є в нас вибране насіння за допомогою нового методу
                 if (currentTile == 1 && inventory.HasSeed(inventory.SelectedSeedType) && !PlantedCrops.ContainsKey(tilePoint)) {
                     PlantedCrops.Add(tilePoint, new Crop(inventory.SelectedSeedType));
                     SoundManager.PlantSeed.Play();
-                    inventory.RemoveSeed(inventory.SelectedSeedType); // Віднімаємо насінину
+                    inventory.RemoveSeed(inventory.SelectedSeedType);
                 }
             }
-            // 3. РУКА (Збираємо врожай)
+            // 3. РУКА (ЗБІР ВРОЖАЮ + ШАНС НАСІННЯ)
             else if (activeTool == ToolType.Hand) {
                 if (PlantedCrops.ContainsKey(tilePoint)) {
                     Crop targetCrop = PlantedCrops[tilePoint];
                     if (targetCrop.IsReadyToHarvest()) {
                         PlantedCrops.Remove(tilePoint);
                         SoundManager.HandCollect.Play();
-                        // Додаємо зібраний врожай до словника, враховуючи його тип!
                         inventory.AddHarvest(targetCrop.Type, 1);
+
+                        // --- ЛОГІКА ПОВЕРНЕННЯ НАСІННЯ ---
+                        float dropChance = Crop.Database[targetCrop.Type].SeedDropChance;
+                        if (dropChance > 0f) {
+                            // Якщо випадкове число (0.0 - 1.0) менше або дорівнює шансу (0.3)
+                            if (_random.NextDouble() <= dropChance) {
+                                inventory.AddSeed(targetCrop.Type, 1);
+                            }
+                        }
                     }
                 }
             }
         }
+
         public void Draw(SpriteBatch spriteBatch) {
-            // 1. Спочатку малюємо саму землю (фон)
+            // 1. Фон (земля, трава, вода)
             for (int y = 0; y < Height; y++) {
                 for (int x = 0; x < Width; x++) {
                     int tileType = _tileMap[y, x];
@@ -95,7 +110,7 @@ namespace ValleyStardew {
                 }
             }
 
-            // 2. Тепер малюємо всі рослини ПОВЕРХ землі
+            // 2. Рослини
             foreach (var item in PlantedCrops) {
                 Point pt = item.Key;
                 Crop crop = item.Value;
@@ -103,18 +118,27 @@ namespace ValleyStardew {
 
                 Texture2D cropTex = null;
 
+                // Розподіляємо 3 картинки на різну кількість днів
                 if (crop.Type == CropType.Wheat) {
-                    if (crop.CurrentPhase == 0) spriteBatch.Draw(_wheatPhase0, pos, Color.White);
-                    else if (crop.CurrentPhase == 1) spriteBatch.Draw(_wheatPhase1, pos, Color.White);
-                    else if (crop.CurrentPhase == 2) spriteBatch.Draw(_wheatPhase2, pos, Color.White);
-                } else {
-                    if (crop.CurrentPhase == 0) spriteBatch.Draw(_cropPhase0, pos, Color.White);
-                    else if (crop.CurrentPhase == 1) spriteBatch.Draw(_cropPhase1, pos, Color.White);
-                    else if (crop.CurrentPhase == 2) spriteBatch.Draw(_cropPhase2, pos, Color.White);
+                    // Пшениця (3 дні)
+                    if (crop.CurrentPhase == 0) cropTex = _wheatPhase0;
+                    else if (crop.CurrentPhase == 1) cropTex = _wheatPhase1;
+                    else cropTex = _wheatPhase2;
+                } else if (crop.Type == CropType.Carrot) {
+                    // Морква (5 днів)
+                    if (crop.CurrentPhase <= 1) cropTex = _carrotPhase0;       // День 0, 1
+                    else if (crop.CurrentPhase <= 4) cropTex = _carrotPhase1;  // День 2, 3, 4
+                    else cropTex = _carrotPhase2;                              // День 5
+                } else if (crop.Type == CropType.Tomato) {
+                    // Помідори (6 днів)
+                    if (crop.CurrentPhase <= 2) cropTex = _tomatoPhase0;       // День 0, 1, 2
+                    else if (crop.CurrentPhase <= 5) cropTex = _tomatoPhase1;  // День 3, 4, 5
+                    else cropTex = _tomatoPhase2;                              // День 6
                 }
 
-                if (cropTex != null)
+                if (cropTex != null) {
                     spriteBatch.Draw(cropTex, pos, Color.White);
+                }
             }
         }
     }

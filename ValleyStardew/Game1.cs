@@ -15,7 +15,7 @@ namespace ValleyStardew {
         private Texture2D _uiPixel;
 
         private Texture2D _iconHoe, _iconSeed, _iconHand, _slotTexture, _slotSelectedTexture; // ToolBar UI
-        private Texture2D _moneyIcon, _btnFrame; // Shop UI
+        private Texture2D _moneyIcon, _shopIconTexture, _btnFrame; // Shop UI
 
         private Point _hoveredTile; // Зберігатиме координати X та Y тайлу, на який дивиться мишка
         private bool _isTileInRange; // Буде true, якщо тайл у зоні 3х3 біля гравця
@@ -39,14 +39,14 @@ namespace ValleyStardew {
             // --- ВІКНО НА ВЕСЬ ЕКРАН (Borderless Window) ---
 
             // 1. Беремо розміри монітора
-            _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
-            _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
+            _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width / 2;
+            _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2;
 
             // 2. ВИМИКАЄМО жорсткий повноекранний режим
-            _graphics.IsFullScreen = true;
+            _graphics.IsFullScreen = false;
 
             // 3. Робимо вікно БЕЗ / З РАМКАМИ (прибираємо верхню смужку з хрестиком)
-            Window.IsBorderless = true;
+            Window.IsBorderless = false;
 
             _graphics.ApplyChanges();
         }
@@ -94,6 +94,7 @@ namespace ValleyStardew {
             _uiPixel.SetData(new[] { Color.White });
 
             _moneyIcon = Content.Load<Texture2D>("Money");
+            _shopIconTexture = Content.Load<Texture2D>("ShopIcon");
             _btnFrame = Content.Load<Texture2D>("ButtonMenuShop");
             _iconHoe = Content.Load<Texture2D>("Hoe");
             _iconSeed = Content.Load<Texture2D>("Seeds");
@@ -288,7 +289,7 @@ namespace ValleyStardew {
             // Y = 27 (трохи нижче, щоб текст був по центру іконки по вертикалі)
             _spriteBatch.DrawString(_uiFont, moneyText, new Vector2(62, 27), Color.Gold);
 
-            _shopManager.Draw(_spriteBatch, _uiPixel, _btnFrame, _uiFont, _player.PlayerInventory);
+            _shopManager.Draw(_spriteBatch, _uiPixel, _btnFrame, _shopIconTexture, _uiFont, _player.PlayerInventory);
 
             // --- Тулбар (Знизу по центру) ---
             int slotSize = 48; // Розмір одного квадратика інвентарю
