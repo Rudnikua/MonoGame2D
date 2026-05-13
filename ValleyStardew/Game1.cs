@@ -73,8 +73,11 @@ namespace ValleyStardew {
             // Ставимо гравця і камеру по центру
             _player.Position = new Vector2((_map.Width * _map.TileSize) / 2, (_map.Height * _map.TileSize) / 2);
             _camera.Position = _player.Center;
+            
 
             base.Initialize();
+
+            ParticleManager.Init(GraphicsDevice);
         }
 
         protected override void LoadContent() {
@@ -206,6 +209,8 @@ namespace ValleyStardew {
             _previousMouseState = mouseState;
             _previousKeyboardState = kstate;
 
+            ParticleManager.Update(gameTime);
+
             base.Update(gameTime);
         }
 
@@ -217,6 +222,7 @@ namespace ValleyStardew {
 
             // Малюємо все по черзі
             _map.Draw(_spriteBatch);
+            ParticleManager.Draw(_spriteBatch);
             _player.Draw(_spriteBatch);
 
             // --- МАЛЮЄМО ПІДСВІТКУ ТАЙЛУ ---

@@ -110,10 +110,19 @@ namespace ValleyStardew {
                     _animationTimer = 0f;
                 }
 
+                // --- ЛОГІКА ЗВУКУ ТА ПИЛУ ПРИ ХОДЬБІ ---
                 _stepTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
-                if (_stepTimer > StepInterval) {
-                    SoundManager.PlayWalk();
-                    _stepTimer = 0f;
+                if (_stepTimer >= StepInterval) {
+                    SoundManager.PlayWalk(); 
+                    
+                    // Розраховуємо позицію ніг гравця (центр по X, низ по Y)
+                    Vector2 feetPos = new Vector2(Position.X + 16, Position.Y + 32); // Твої координати ніг
+                    Color currentTileColor = map.GetTileColorAt(feetPos); 
+
+                    // 2. Викликаємо пил з правильним кольором
+                    ParticleManager.AddWalkingDust(feetPos, currentTileColor);
+                    
+                    _stepTimer = 0f;         
                 }
             } else {
                 _currentFrame = 0;

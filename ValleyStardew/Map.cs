@@ -82,10 +82,35 @@ namespace ValleyStardew {
                         SoundManager.HandCollect.Play();
                         inventory.AddHarvest(targetCrop.Type, 1);
 
+                        // --- ВИЗНАЧАЄМО ТЕКСТУРУ ДЛЯ ЧАСТИНОК ---
+                        Texture2D particleTexture = null;
+                        
+                        switch (targetCrop.Type) {
+                            case CropType.Wheat:
+                                particleTexture = _wheatPhase2; // Фінальна стадія пшениці
+                                break;
+                            case CropType.Carrot:
+                                particleTexture = _carrotPhase2; // Фінальна стадія моркви
+                                break;
+                            case CropType.Tomato:
+                                particleTexture = _tomatoPhase2; // Фінальна стадія помідора
+                                break;
+                        }
+
+                        // Центр тайлу для красивого "вибуху"
+                        Vector2 centerOfTile = new Vector2(
+                            x * TileSize + (TileSize / 2), 
+                            y * TileSize + (TileSize / 2)
+                        );
+
+                        // Викликаємо частинки з правильною текстурою
+                        if (particleTexture != null) {
+                            ParticleManager.AddHarvestParticles(centerOfTile, particleTexture); 
+                        }
+
                         // --- ЛОГІКА ПОВЕРНЕННЯ НАСІННЯ ---
                         float dropChance = Crop.Database[targetCrop.Type].SeedDropChance;
                         if (dropChance > 0f) {
-                            // Якщо випадкове число (0.0 - 1.0) менше або дорівнює шансу (0.3)
                             if (_random.NextDouble() <= dropChance) {
                                 inventory.AddSeed(targetCrop.Type, 1);
                             }
@@ -93,6 +118,25 @@ namespace ValleyStardew {
                     }
                 }
             }
+        }
+
+        public Color GetTileColorAt(Vector2 worldPosition) {
+            // Перераховуємо піксельні координати у координати сітки (тайли)
+            int x = (int)(worldPosition.X / TileSize);
+            int y = (int)(worldPosition.Y / TileSize);
+
+            // Перевірка меж мапи
+            if (x < 0 || x >= Width || y < 0 || y >= Height) return Color.Transparent;
+
+            int tileType = _tileMap[y, x];
+
+            // Повертаємо колір залежно від типу тайлу
+            return tileType switch {
+                0 => new Color(100, 150, 50),  // Трава (зеленуватий пил)
+                1 => new Color(139, 69, 19),   // Зорана земля (коричневий)
+                2 => new Color(100, 200, 255), // Вода (блакитні бризки)
+                _ => Color.White
+            };
         }
 
         public void Draw(SpriteBatch spriteBatch) {
