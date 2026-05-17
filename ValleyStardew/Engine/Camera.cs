@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
-namespace ValleyStardew {
+namespace ValleyStardew.Engine {
     public class Camera {
         public Vector2 Position;
 

@@ -2,7 +2,8 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using System.Collections.Generic;
-using System; 
+using System;
+using ValleyStardew.Engine;
 
 namespace ValleyStardew {
     public class Map {
@@ -100,8 +101,8 @@ namespace ValleyStardew {
                         }
 
                         Vector2 centerOfTile = new Vector2(
-                            x * TileSize + (TileSize / 2), 
-                            y * TileSize + (TileSize / 2)
+                            x * TileSize + TileSize / 2, 
+                            y * TileSize + TileSize / 2
                         );
 
                         if (particleTexture != null) {

@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Content;
 using System;
 
-namespace ValleyStardew {
+namespace ValleyStardew.Engine {
     public static class SoundManager {
         public static SoundEffect DirtWork, PlantSeed, HandCollect, ClickSound;
         public static SoundEffect[] WalkSounds;

@@ -4,7 +4,7 @@ namespace ValleyStardew {
     public enum ToolType { Hand, Hoe, Seed }
 
     public class Inventory {
-        public int Money { get; set; } = 100;
+        public int Money { get; set; } = 1000;
 
         public Dictionary<CropType, int> Seeds { get; private set; }
         public Dictionary<CropType, int> HarvestedCrops { get; private set; }

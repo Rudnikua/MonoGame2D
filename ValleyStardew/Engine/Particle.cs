@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace ValleyStardew {
+namespace ValleyStardew.Engine {
     public class Particle {
         public Vector2 Position;
         public Vector2 Velocity;
@@ -10,11 +10,9 @@ namespace ValleyStardew {
         public float MaxLifespan;
         public float Scale;
         
-        // Додаткові параметри для шматочків рослин
         public Texture2D Texture; 
         public Rectangle? SourceRect; 
 
-        // КОНСТРУКТОР НА 7 АРГУМЕНТІВ
         public Particle(Vector2 position, Vector2 velocity, Color color, float lifespan, float scale, Texture2D texture = null, Rectangle? sourceRect = null) {
             Position = position;
             Velocity = velocity;

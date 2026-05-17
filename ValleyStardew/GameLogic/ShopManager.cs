@@ -2,24 +2,21 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
+using ValleyStardew.Engine;
 
 namespace ValleyStardew {
-    // Оголошення станів магазину
     public enum ShopState { Closed, MainMenu, BuyPanel, SellPanel }
 
     public class ShopManager {
         public ShopState CurrentState { get; private set; } = ShopState.Closed;
 
-        private Rectangle _shopIconRect = new Rectangle(20, 70, 48, 48);
+        public bool TicketBought { get; private set; } = false;
 
-        // Кнопки головного меню (Кнопку Close видалено)
+        private Rectangle _shopIconRect = new Rectangle(20, 70, 48, 48);
         private Rectangle _buyMenuBtnRect = new Rectangle(80, 70, 96, 48);
         private Rectangle _sellMenuBtnRect = new Rectangle(80, 125, 96, 48);
-
-        // Основна панель (X = 80, щоб співпадати з кнопками)
         private Rectangle _panelRect = new Rectangle(80, 50, 320, 420);
 
-        // Хрестик закриття панелей (ЗАЛИШИВСЯ БЕЗ ЗМІН)
         private Rectangle _closePanelBtnRect => new Rectangle(
             _panelRect.Right - 32 - 10,
             _panelRect.Top + 10,
@@ -35,13 +32,9 @@ namespace ValleyStardew {
 
             if (_shopIconRect.Contains(mousePos)) {
                 SoundManager.ClickSound.Play();
-
-                if (CurrentState == ShopState.Closed) {
-                    CurrentState = ShopState.MainMenu; 
-                } else {
-                    CurrentState = ShopState.Closed;   
-                }
-                return; 
+                if (CurrentState == ShopState.Closed) CurrentState = ShopState.MainMenu;
+                else CurrentState = ShopState.Closed;
+                return;
             }
 
             switch (CurrentState) {
@@ -57,7 +50,6 @@ namespace ValleyStardew {
 
                 case ShopState.BuyPanel:
                 case ShopState.SellPanel:
-                    // Хрестик всередині панелі повертає нас до головного меню магазину
                     if (_closePanelBtnRect.Contains(mousePos)) {
                         SoundManager.ClickSound.Play();
                         CurrentState = ShopState.MainMenu;
@@ -80,6 +72,14 @@ namespace ValleyStardew {
                     }
                     yOffset += 55;
                 }
+
+                Rectangle ticketBtnRect = new Rectangle(_panelRect.X + 200, yOffset, 96, 48);
+                if (ticketBtnRect.Contains(mousePos) && inventory.Money >= 1000) {
+                    SoundManager.ClickSound.Play();
+                    inventory.Money -= 1000;
+                    TicketBought = true; 
+                }
+
             } else if (CurrentState == ShopState.SellPanel) {
                 foreach (var kvp in inventory.HarvestedCrops) {
                     if (kvp.Value <= 0) continue;
@@ -132,9 +132,13 @@ namespace ValleyStardew {
                 if (CurrentState == ShopState.BuyPanel) {
                     foreach (var kvp in Crop.Database) {
                         spriteBatch.DrawString(font, $"{kvp.Value.Name}\n{kvp.Value.SeedPrice}$", new Vector2(_panelRect.X + 30, yOffset), Color.White);
-                        DrawButton(spriteBatch, btnTexture, font, new Rectangle(_panelRect.X + 200, yOffset, 96, 48), "Get");
+                        DrawButton(spriteBatch, btnTexture, font, new Rectangle(_panelRect.X + 200, yOffset, 96, 48), "Buy");
                         yOffset += 55;
                     }
+
+                    spriteBatch.DrawString(font, "Hawaii Ticket\n1000$", new Vector2(_panelRect.X + 30, yOffset), Color.Gold);
+                    DrawButton(spriteBatch, btnTexture, font, new Rectangle(_panelRect.X + 200, yOffset, 96, 48), "Buy");
+
                 } else {
                     foreach (var kvp in inventory.HarvestedCrops) {
                         if (kvp.Value <= 0) continue;
@@ -155,19 +159,15 @@ namespace ValleyStardew {
         }
 
         private void DrawNineSlice(SpriteBatch sb, Texture2D tex, Rectangle targetRect, int thickness) {
-            int w = tex.Width;
-            int h = tex.Height;
-            // Кути
+            int w = tex.Width; int h = tex.Height;
             sb.Draw(tex, new Rectangle(targetRect.Left, targetRect.Top, thickness, thickness), new Rectangle(0, 0, thickness, thickness), Color.White);
             sb.Draw(tex, new Rectangle(targetRect.Right - thickness, targetRect.Top, thickness, thickness), new Rectangle(w - thickness, 0, thickness, thickness), Color.White);
             sb.Draw(tex, new Rectangle(targetRect.Left, targetRect.Bottom - thickness, thickness, thickness), new Rectangle(0, h - thickness, thickness, thickness), Color.White);
             sb.Draw(tex, new Rectangle(targetRect.Right - thickness, targetRect.Bottom - thickness, thickness, thickness), new Rectangle(w - thickness, h - thickness, thickness, thickness), Color.White);
-            // Краї
             sb.Draw(tex, new Rectangle(targetRect.Left + thickness, targetRect.Top, targetRect.Width - 2 * thickness, thickness), new Rectangle(thickness, 0, w - 2 * thickness, thickness), Color.White);
             sb.Draw(tex, new Rectangle(targetRect.Left + thickness, targetRect.Bottom - thickness, targetRect.Width - 2 * thickness, thickness), new Rectangle(thickness, h - thickness, w - 2 * thickness, thickness), Color.White);
             sb.Draw(tex, new Rectangle(targetRect.Left, targetRect.Top + thickness, thickness, targetRect.Height - 2 * thickness), new Rectangle(0, thickness, thickness, h - 2 * thickness), Color.White);
             sb.Draw(tex, new Rectangle(targetRect.Right - thickness, targetRect.Top + thickness, thickness, targetRect.Height - 2 * thickness), new Rectangle(w - thickness, thickness, thickness, h - 2 * thickness), Color.White);
-            // Центр
             sb.Draw(tex, new Rectangle(targetRect.Left + thickness, targetRect.Top + thickness, targetRect.Width - 2 * thickness, targetRect.Height - 2 * thickness), new Rectangle(thickness, thickness, w - 2 * thickness, h - 2 * thickness), Color.White);
         }
     }

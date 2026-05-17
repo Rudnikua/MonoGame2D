@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 
-namespace ValleyStardew {
+namespace ValleyStardew.Engine {
     public class TimeManager {
         public int Day { get; private set; } = 1;
         public int Hour { get; private set; } = 6; 

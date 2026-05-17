@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 
-namespace ValleyStardew {
+namespace ValleyStardew.Engine {
     public static class ParticleManager {
         private static List<Particle> _particles = new List<Particle>();
         private static Random _rand = new Random();
