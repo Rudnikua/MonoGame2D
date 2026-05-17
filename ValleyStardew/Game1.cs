@@ -28,7 +28,6 @@ namespace ValleyStardew {
         private Map _map;
         private Camera _camera;
 
-        // ПОЛІМОРФНА ЗМІННА: Може тримати будь-який рівень (FarmLevel або VictoryLevel)
         private Level _currentLevel;
 
         private Texture2D _victoryScreen;
@@ -37,12 +36,14 @@ namespace ValleyStardew {
         public Game1() {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
-            IsMouseVisible = true;
 
-            _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width / 2;
-            _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2;
+            _graphics.PreferredBackBufferWidth = (int)(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width / 1.5);
+            _graphics.PreferredBackBufferHeight = (int)(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 1.5);
+
             _graphics.IsFullScreen = false;
-            Window.IsBorderless = false;
+            Window.IsBorderless = true;
+
+            IsMouseVisible = true;
             _graphics.ApplyChanges();
         }
 
@@ -196,10 +197,10 @@ namespace ValleyStardew {
                 }
 
                 var playerController = farm.PlayerEntity.GetComponent<PlayerControllerComponent>();
-                if (playerController != null) {
-                    _spriteBatch.Draw(_debugDot, new Rectangle((int)playerController.Center.X - 5, (int)playerController.Center.Y - 5, 10, 10), Color.Green);
-                }
-                _spriteBatch.Draw(_debugDot, new Rectangle((int)_camera.Position.X - 3, (int)_camera.Position.Y - 3, 6, 6), Color.Red);
+                //if (playerController != null) {
+                //    _spriteBatch.Draw(_debugDot, new Rectangle((int)playerController.Center.X - 5, (int)playerController.Center.Y - 5, 10, 10), Color.Green);
+                //}
+                //_spriteBatch.Draw(_debugDot, new Rectangle((int)_camera.Position.X - 3, (int)_camera.Position.Y - 3, 6, 6), Color.Red);
                 _spriteBatch.End();
 
                 // ІНТЕРФЕЙС ФЕРМИ
