@@ -7,13 +7,12 @@ namespace ValleyStardew {
         Tomato 
     }
 
-    // Структура тепер містить час росту та шанс випадіння насіння
     public struct CropData {
         public string Name;
         public int SeedPrice;
         public int SellPrice;
         public int MaxPhase; 
-        public float SeedDropChance; // Шанс повернути насіння (від 0.0 до 1.0)
+        public float SeedDropChance; 
     }
 
     public class Crop {
@@ -35,7 +34,6 @@ namespace ValleyStardew {
         public Crop(CropType type) {
             Type = type;
             CurrentPhase = 0;
-            // Беремо час росту з нашої бази даних
             MaxPhase = Database[type].MaxPhase;
         }
 

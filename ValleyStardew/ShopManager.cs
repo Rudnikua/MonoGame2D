@@ -12,15 +12,14 @@ namespace ValleyStardew {
 
         private Rectangle _shopIconRect = new Rectangle(20, 70, 48, 48);
 
-        // Кнопки головного меню (X = 80)
+        // Кнопки головного меню (Кнопку Close видалено)
         private Rectangle _buyMenuBtnRect = new Rectangle(80, 70, 96, 48);
         private Rectangle _sellMenuBtnRect = new Rectangle(80, 125, 96, 48);
-        private Rectangle _closeMenuBtnRect = new Rectangle(80, 180, 96, 48);
 
         // Основна панель (X = 80, щоб співпадати з кнопками)
         private Rectangle _panelRect = new Rectangle(80, 50, 320, 420);
 
-        // Кнопка закриття (32x32) справа зверху панелі з відступом
+        // Хрестик закриття панелей (ЗАЛИШИВСЯ БЕЗ ЗМІН)
         private Rectangle _closePanelBtnRect => new Rectangle(
             _panelRect.Right - 32 - 10,
             _panelRect.Top + 10,
@@ -34,14 +33,18 @@ namespace ValleyStardew {
 
             Point mousePos = new Point(mouseState.X, mouseState.Y);
 
-            switch (CurrentState) {
-                case ShopState.Closed:
-                    if (_shopIconRect.Contains(mousePos)) {
-                        SoundManager.ClickSound.Play();
-                        CurrentState = ShopState.MainMenu;
-                    }
-                        break;
+            if (_shopIconRect.Contains(mousePos)) {
+                SoundManager.ClickSound.Play();
 
+                if (CurrentState == ShopState.Closed) {
+                    CurrentState = ShopState.MainMenu; 
+                } else {
+                    CurrentState = ShopState.Closed;   
+                }
+                return; 
+            }
+
+            switch (CurrentState) {
                 case ShopState.MainMenu:
                     if (_buyMenuBtnRect.Contains(mousePos)) {
                         SoundManager.ClickSound.Play();
@@ -49,19 +52,16 @@ namespace ValleyStardew {
                     } else if (_sellMenuBtnRect.Contains(mousePos)) {
                         SoundManager.ClickSound.Play();
                         CurrentState = ShopState.SellPanel;
-                    } else if (_closeMenuBtnRect.Contains(mousePos)) {
-                        SoundManager.ClickSound.Play();
-                        CurrentState = ShopState.Closed;
                     }
-                        break;
+                    break;
 
                 case ShopState.BuyPanel:
                 case ShopState.SellPanel:
+                    // Хрестик всередині панелі повертає нас до головного меню магазину
                     if (_closePanelBtnRect.Contains(mousePos)) {
                         SoundManager.ClickSound.Play();
                         CurrentState = ShopState.MainMenu;
                     } else {
-                        SoundManager.ClickSound.Play();
                         UpdatePanelInteractions(mousePos, inventory);
                     }
                     break;
@@ -74,6 +74,7 @@ namespace ValleyStardew {
                 foreach (var kvp in Crop.Database) {
                     Rectangle btnRect = new Rectangle(_panelRect.X + 200, yOffset, 96, 48);
                     if (btnRect.Contains(mousePos) && inventory.Money >= kvp.Value.SeedPrice) {
+                        SoundManager.ClickSound.Play();
                         inventory.Money -= kvp.Value.SeedPrice;
                         inventory.AddSeed(kvp.Key, 1);
                     }
@@ -84,6 +85,7 @@ namespace ValleyStardew {
                     if (kvp.Value <= 0) continue;
                     Rectangle btnRect = new Rectangle(_panelRect.X + 200, yOffset, 96, 48);
                     if (btnRect.Contains(mousePos)) {
+                        SoundManager.ClickSound.Play();
                         inventory.Money += kvp.Value * Crop.Database[kvp.Key].SellPrice;
                         inventory.HarvestedCrops[kvp.Key] = 0;
                     }
@@ -92,24 +94,29 @@ namespace ValleyStardew {
             }
         }
 
-        public bool IsPlayerInputBlocked() {
-            return CurrentState != ShopState.Closed;
+        public bool IsMouseOverUI(Point mousePos) {
+            if (_shopIconRect.Contains(mousePos)) return true;
+
+            if (CurrentState == ShopState.MainMenu) {
+                if (_buyMenuBtnRect.Contains(mousePos)) return true;
+                if (_sellMenuBtnRect.Contains(mousePos)) return true;
+            } else if (CurrentState == ShopState.BuyPanel || CurrentState == ShopState.SellPanel) {
+                if (_panelRect.Contains(mousePos)) return true;
+                if (_closePanelBtnRect.Contains(mousePos)) return true;
+            }
+
+            return false;
         }
 
         public void Draw(SpriteBatch spriteBatch, Texture2D uiPixel, Texture2D btnTexture, Texture2D shopIcon, SpriteFont font, Inventory inventory) {
-            // Малюємо іконку магазину (завжди видима)
             spriteBatch.Draw(shopIcon, _shopIconRect, Color.White);
-           //  spriteBatch.DrawString(font, "Shop", new Vector2(_shopIconRect.X + 5, _shopIconRect.Y + 15), Color.White);
 
             if (CurrentState == ShopState.MainMenu) {
                 DrawButton(spriteBatch, btnTexture, font, _buyMenuBtnRect, "Buy");
                 DrawButton(spriteBatch, btnTexture, font, _sellMenuBtnRect, "Sell");
-                DrawButton(spriteBatch, btnTexture, font, _closeMenuBtnRect, "Close");
             } else if (CurrentState == ShopState.BuyPanel || CurrentState == ShopState.SellPanel) {
-                // Малюємо фон панелі
                 DrawNineSlice(spriteBatch, btnTexture, _panelRect, 12);
 
-                // Кнопка закриття
                 spriteBatch.Draw(uiPixel, _closePanelBtnRect, Color.Red);
                 Vector2 xSize = font.MeasureString("X");
                 Vector2 xPos = new Vector2(

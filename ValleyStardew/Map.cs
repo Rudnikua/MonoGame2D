@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using System.Collections.Generic;
-using System; // Потрібно для генератора випадкових чисел
+using System; 
 
 namespace ValleyStardew {
     public class Map {
@@ -42,12 +42,12 @@ namespace ValleyStardew {
             _wheatPhase1 = content.Load<Texture2D>("Wheat_Stage2");
             _wheatPhase2 = content.Load<Texture2D>("Wheat_Stage3");
 
-            // Морква (Заміни назви файлів на ті, що дав художник)
+            // Морква 
             _carrotPhase0 = content.Load<Texture2D>("Carrot_Stage1");
             _carrotPhase1 = content.Load<Texture2D>("Carrot_Stage2");
             _carrotPhase2 = content.Load<Texture2D>("Carrot_Stage3");
 
-            // Помідори (Заміни назви файлів на ті, що дав художник)
+            // Помідори
             _tomatoPhase0 = content.Load<Texture2D>("Tomato_Stage1");
             _tomatoPhase1 = content.Load<Texture2D>("Tomato_Stage2");
             _tomatoPhase2 = content.Load<Texture2D>("Tomato_Stage3");
@@ -79,36 +79,35 @@ namespace ValleyStardew {
                     Crop targetCrop = PlantedCrops[tilePoint];
                     if (targetCrop.IsReadyToHarvest()) {
                         PlantedCrops.Remove(tilePoint);
+
+                        _tileMap[y, x] = 0; 
+
                         SoundManager.HandCollect.Play();
                         inventory.AddHarvest(targetCrop.Type, 1);
 
-                        // --- ВИЗНАЧАЄМО ТЕКСТУРУ ДЛЯ ЧАСТИНОК ---
                         Texture2D particleTexture = null;
                         
                         switch (targetCrop.Type) {
                             case CropType.Wheat:
-                                particleTexture = _wheatPhase2; // Фінальна стадія пшениці
+                                particleTexture = _wheatPhase2; 
                                 break;
                             case CropType.Carrot:
-                                particleTexture = _carrotPhase2; // Фінальна стадія моркви
+                                particleTexture = _carrotPhase2; 
                                 break;
                             case CropType.Tomato:
-                                particleTexture = _tomatoPhase2; // Фінальна стадія помідора
+                                particleTexture = _tomatoPhase2; 
                                 break;
                         }
 
-                        // Центр тайлу для красивого "вибуху"
                         Vector2 centerOfTile = new Vector2(
                             x * TileSize + (TileSize / 2), 
                             y * TileSize + (TileSize / 2)
                         );
 
-                        // Викликаємо частинки з правильною текстурою
                         if (particleTexture != null) {
                             ParticleManager.AddHarvestParticles(centerOfTile, particleTexture); 
                         }
 
-                        // --- ЛОГІКА ПОВЕРНЕННЯ НАСІННЯ ---
                         float dropChance = Crop.Database[targetCrop.Type].SeedDropChance;
                         if (dropChance > 0f) {
                             if (_random.NextDouble() <= dropChance) {
@@ -165,8 +164,8 @@ namespace ValleyStardew {
                 // Розподіляємо 3 картинки на різну кількість днів
                 if (crop.Type == CropType.Wheat) {
                     // Пшениця (3 дні)
-                    if (crop.CurrentPhase == 0) cropTex = _wheatPhase0;
-                    else if (crop.CurrentPhase == 1) cropTex = _wheatPhase1;
+                    if (crop.CurrentPhase <= 1) cropTex = _wheatPhase0;
+                    else if (crop.CurrentPhase == 2) cropTex = _wheatPhase1;
                     else cropTex = _wheatPhase2;
                 } else if (crop.Type == CropType.Carrot) {
                     // Морква (5 днів)

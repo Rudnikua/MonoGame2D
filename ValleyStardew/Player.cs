@@ -10,9 +10,8 @@ namespace ValleyStardew {
         private KeyboardState _previousKeyboardState;
 
         private float _stepTimer = 0f;
-        private const float StepInterval = 0.4f; // Час між кроками (в секундах). Зміни, якщо кроки зашвидкі/заповільні
+        private const float StepInterval = 0.4f; 
 
-        // Додаємо інвентар гравцеві
         public Inventory PlayerInventory = new Inventory();
         public Vector2 Center {
             get {
@@ -70,35 +69,30 @@ namespace ValleyStardew {
             }
 
             // --- 1. ЛОГІКА РУХУ ТА ВИБІР АНІМАЦІЇ ---
-            // У моєму коді: 0 - Вниз, 1 - Вправо (і Вліво), 2 - Вгору. 
-            // Якщо у тебе _currentAnimationRow = 2 йде боком, значить у тебе 
-            // на спрайтшиті інший порядок! Просто поміняй цифри місцями!
-
             if (kstate.IsKeyDown(Keys.Up) || kstate.IsKeyDown(Keys.W)) {
                 Position.Y -= _speed;
-                _currentAnimationRow = 2; // Переконайся, що на спрайтшиті це ВГОРУ
+                _currentAnimationRow = 2; 
                 _spriteEffects = SpriteEffects.None;
                 _isMoving = true;
             }
             if (kstate.IsKeyDown(Keys.Down) || kstate.IsKeyDown(Keys.S)) {
                 Position.Y += _speed;
-                _currentAnimationRow = 0; // Переконайся, що це ВНИЗ
+                _currentAnimationRow = 0; 
                 _isMoving = true;
             }
             if (kstate.IsKeyDown(Keys.Right) || kstate.IsKeyDown(Keys.D)) {
                 Position.X += _speed;
-                _currentAnimationRow = 1; // Переконайся, що це ВПРАВО
+                _currentAnimationRow = 1; 
                 _spriteEffects = SpriteEffects.FlipHorizontally;
                 _isMoving = true;
             }
             if (kstate.IsKeyDown(Keys.Left) || kstate.IsKeyDown(Keys.A)) {
                 Position.X -= _speed;
-                _currentAnimationRow = 1; // Беремо анімацію ВПРАВО
+                _currentAnimationRow = 1; 
                 _spriteEffects = SpriteEffects.None;
                 _isMoving = true;
             }
 
-            // --- 2. ТАЙМЕР АНІМАЦІЇ ---
             if (_isMoving) {
                 _animationTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
 
@@ -110,16 +104,13 @@ namespace ValleyStardew {
                     _animationTimer = 0f;
                 }
 
-                // --- ЛОГІКА ЗВУКУ ТА ПИЛУ ПРИ ХОДЬБІ ---
                 _stepTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
                 if (_stepTimer >= StepInterval) {
                     SoundManager.PlayWalk(); 
                     
-                    // Розраховуємо позицію ніг гравця (центр по X, низ по Y)
-                    Vector2 feetPos = new Vector2(Position.X + 16, Position.Y + 32); // Твої координати ніг
+                    Vector2 feetPos = new Vector2(Position.X + 16, Position.Y + 32); 
                     Color currentTileColor = map.GetTileColorAt(feetPos); 
 
-                    // 2. Викликаємо пил з правильним кольором
                     ParticleManager.AddWalkingDust(feetPos, currentTileColor);
                     
                     _stepTimer = 0f;         
@@ -130,7 +121,6 @@ namespace ValleyStardew {
             }
 
             // --- 3. КОЛІЗІЇ З МЕЖАМИ КАРТИ ---
-            // Колізії ідеально підлаштовуються під будь-який розмір персонажа!
             if (_texture != null) {
                 float feetHeight = map.TileSize;
                 float feetY = Position.Y + (_characterTextureHeight - feetHeight);

@@ -52,7 +52,6 @@ namespace ValleyStardew {
         }
 
         protected override void Initialize() {
-            // Створюємо їх
             _map = new Map();
             _player = new Player();
             _camera = new Camera();
@@ -61,7 +60,6 @@ namespace ValleyStardew {
             _timeManager = new TimeManager();
             _timeManager.RealSecondsPerHour = 0.2f; // CHANGE TIME SPEED HERE
 
-            // Підписуємося на подію нового дня: коли він настає, всі рослини ростуть
             _timeManager.OnNewDay += () => {
                 foreach (var crop in _map.PlantedCrops.Values) {
                     crop.Grow();
@@ -166,42 +164,17 @@ namespace ValleyStardew {
             // Тайл доступний, якщо мишка на карті І відстань по X та Y не більша за 1
             _isTileInRange = isHoveringMap && (distanceX <= 3 && distanceY <= 3);
 
-            // Оновлюємо магазин ПЕРЕД світом
             _shopManager.Update(mouseState, _previousMouseState, _player.PlayerInventory);
 
-            // Якщо магазин ВІДКРИТИЙ - блокуємо фермерство!
-            if (!_shopManager.IsPlayerInputBlocked()) {
-                // Дозволяємо працювати інструментом
-                if (mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Released) {
-                    if (_isTileInRange) {
-                        _map.InteractWithTile(_hoveredTile.X, _hoveredTile.Y, _player.PlayerInventory);
-                    }
-                }
-            }
+            Point mousePoint = new Point(mouseState.X, mouseState.Y);
 
             // === ЛОГІКА КЛІКУ ПО ЗЕМЛІ ===
-
-            // === ЛОГІКА КЛІКІВ (UI та Світ) ===
-            if (mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Released) {
-                // 1. Створюємо точку мишки для перевірки
-                Point mouseScreenPoint = new Point(mouseState.X, mouseState.Y);
-
-                // Ті самі координати кнопок, що й у методі Draw
-                Rectangle buyButtonRect = new Rectangle(20, 70, 180, 40);
-                Rectangle sellButtonRect = new Rectangle(20, 120, 180, 40);
-
-                bool clickedUI = false;
-
-                // 2. Перевіряємо клік по кнопці КУПИТИ
+            // Дозволяємо працювати інструментом ТІЛЬКИ якщо мишка НЕ наведена на інтерфейс магазину
+            if (!_shopManager.IsMouseOverUI(mousePoint)) {
                 if (mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Released) {
                     if (_isTileInRange) {
                         _map.InteractWithTile(_hoveredTile.X, _hoveredTile.Y, _player.PlayerInventory);
                     }
-                }
-
-                // 4. ЯКЩО МИ НЕ КЛІКНУЛИ ПО UI -> Дозволяємо взаємодію зі світом
-                if (!clickedUI && _isTileInRange) {
-                    _map.InteractWithTile(_hoveredTile.X, _hoveredTile.Y, _player.PlayerInventory);
                 }
             }
 
@@ -246,13 +219,13 @@ namespace ValleyStardew {
 
             // --- МАЛЮЄМО ДЕБАГ-ТОЧКИ ---
 
-            // 1. Зелена точка - Центр гравця (розмір 10x10 пікселів, зміщуємо на -5 щоб відцентрувати)
-            Rectangle playerCenterRect = new Rectangle((int)_player.Center.X - 5, (int)_player.Center.Y - 5, 10, 10);
-            _spriteBatch.Draw(_debugDot, playerCenterRect, Color.Green);
+            //// 1. Зелена точка - Центр гравця (розмір 10x10 пікселів, зміщуємо на -5 щоб відцентрувати)
+            //Rectangle playerCenterRect = new Rectangle((int)_player.Center.X - 5, (int)_player.Center.Y - 5, 10, 10);
+            //_spriteBatch.Draw(_debugDot, playerCenterRect, Color.Green);
 
-            // 2. Червона точка - Поточна позиція камери (розмір 6x6, щоб було видно на тлі зеленої)
-            Rectangle cameraPosRect = new Rectangle((int)_camera.Position.X - 3, (int)_camera.Position.Y - 3, 6, 6);
-            _spriteBatch.Draw(_debugDot, cameraPosRect, Color.Red);
+            //// 2. Червона точка - Поточна позиція камери (розмір 6x6, щоб було видно на тлі зеленої)
+            //Rectangle cameraPosRect = new Rectangle((int)_camera.Position.X - 3, (int)_camera.Position.Y - 3, 6, 6);
+            //_spriteBatch.Draw(_debugDot, cameraPosRect, Color.Red);
 
             _spriteBatch.End();
 
@@ -297,7 +270,6 @@ namespace ValleyStardew {
 
             _shopManager.Draw(_spriteBatch, _uiPixel, _btnFrame, _shopIconTexture, _uiFont, _player.PlayerInventory);
 
-            // --- Тулбар (Знизу по центру) ---
             int slotSize = 48; // Розмір одного квадратика інвентарю
             int spacing = 8;  // Відстань між квадратиками
             int totalSlots = _player.PlayerInventory.Toolbar.Count;
@@ -359,7 +331,6 @@ namespace ValleyStardew {
             }
 
             _spriteBatch.End();
-            // ==========================================
 
             base.Draw(gameTime);
         }

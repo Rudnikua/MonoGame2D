@@ -4,20 +4,15 @@ using System;
 namespace ValleyStardew {
     public class TimeManager {
         public int Day { get; private set; } = 1;
-        public int Hour { get; private set; } = 6; // Стартуємо о 6:00
-        public int Minute { get; private set; } = 0; // Хвилини завжди 0, бо ми додаємо по годині
+        public int Hour { get; private set; } = 6; 
+        public int Minute { get; private set; } = 0; 
 
-        // Додай цю змінну до інших (наприклад, біля _timer)
         public float CurrentDarkness { get; private set; } = 0f;
 
-        // --- НАЛАШТУВАННЯ ШВИДКОСТІ ---
-        // Скільки реальних секунд триває 1 ігрова година.
-        // Зміни це значення на більше (наприклад 5.0f), щоб час ішов ще повільніше.
         public float RealSecondsPerHour { get; set; } = 2.0f;
 
         private float _timer = 0f;
 
-        // Подія, яка викликається о 6:00 ранку
         public Action OnNewDay;
 
         public void Update(GameTime gameTime) {
@@ -47,7 +42,6 @@ namespace ValleyStardew {
         }
 
         public string GetTimeString() {
-            // Виводимо час у форматі "06:00", "23:00", "00:00"
             return $"{Hour:D2}:00";
         }
 

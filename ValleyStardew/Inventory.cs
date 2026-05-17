@@ -4,14 +4,11 @@ namespace ValleyStardew {
     public enum ToolType { Hand, Hoe, Seed }
 
     public class Inventory {
-        public int Money { get; set; } = 1000;
+        public int Money { get; set; } = 100;
 
-        // --- НОВІ СЛОВНИКИ ДЛЯ РЕСУРСІВ ---
-        // Ключ - тип рослини, Значення - кількість
         public Dictionary<CropType, int> Seeds { get; private set; }
         public Dictionary<CropType, int> HarvestedCrops { get; private set; }
 
-        // Яке насіння зараз вибране для посадки (за замовчуванням - Ріпа)
         public CropType SelectedSeedType { get; set; } = CropType.Wheat;
 
         public List<ToolType> Toolbar { get; private set; }
@@ -31,7 +28,6 @@ namespace ValleyStardew {
             if (index >= 0 && index < Toolbar.Count) ActiveSlotIndex = index;
         }
 
-        // --- ЗРУЧНІ МЕТОДИ ДЛЯ РОБОТИ З РЕСУРСАМИ ---
         public void AddSeed(CropType type, int amount) {
             if (!Seeds.ContainsKey(type)) Seeds[type] = 0;
             Seeds[type] += amount;
@@ -50,7 +46,6 @@ namespace ValleyStardew {
             HarvestedCrops[type] += amount;
         }
 
-        // --- МЕТОД ДЛЯ ПЕРЕМИКАННЯ НАСІННЯ ---
         public void CycleSeedType() {
             // Отримуємо масив усіх існуючих видів насіння
             CropType[] allTypes = (CropType[])System.Enum.GetValues(typeof(CropType));
